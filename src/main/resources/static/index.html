@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NasChat</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #d8d7d3;
+      --panel: #e7e5e0;
+      --panel-soft: #efeee9;
+      --ink: #36363d;
+      --muted: #77757d;
+      --line: #88868b;
+      --lavender: #8e899f;
+      --rose: #b6828b;
+      --teal: #728f8d;
+      --shadow: #aaa8a3;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 26px;
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      background-color: #c9c8c5;
+      background-image:
+        radial-gradient(#85838a33 1px, transparent 1px),
+        linear-gradient(135deg, #d4d3d0 0%, #bebdbb 100%);
+      background-size: 8px 8px, 100% 100%;
+    }
+
+    .chat-app {
+      position: relative;
+      width: min(900px, 100%);
+      height: min(780px, calc(100vh - 52px));
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      overflow: hidden;
+      border: 2px solid var(--ink);
+      border-radius: 5px;
+      background: var(--panel);
+      box-shadow: 10px 10px 0 #77767a55;
+    }
+
+    .chat-app::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: .12;
+      background: repeating-linear-gradient(0deg, transparent 0 3px, #4d4c52 4px);
+      mix-blend-mode: multiply;
+    }
+
+    header {
+      z-index: 1;
+      display: flex;
+      align-items: stretch;
+      min-height: 76px;
+      border-bottom: 2px solid var(--ink);
+      background: var(--panel-soft);
+    }
+
+    .episode {
+      width: 84px;
+      display: grid;
+      place-items: center;
+      border-right: 2px solid var(--ink);
+      color: white;
+      font: 700 .78rem/1.2 "Courier New", monospace;
+      text-align: center;
+      letter-spacing: .08em;
+      background: var(--lavender);
+    }
+
+    .brand {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      padding: 13px 18px;
+    }
+
+    .portrait {
+      width: 42px;
+      height: 42px;
+      flex: 0 0 42px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border-radius: 50%;
+    }
+
+    .portrait img,
+    .portrait svg {
+      display: block;
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+    }
+
+    h1 {
+      margin: 0;
+      font: 700 1.05rem/1.2 "Courier New", monospace;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font: .75rem/1.2 "Courier New", monospace;
+      letter-spacing: .05em;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 0 18px;
+      border-left: 1px solid var(--line);
+      color: var(--muted);
+      font: .72rem "Courier New", monospace;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border: 1px solid var(--ink);
+      border-radius: 50%;
+      background: var(--teal);
+    }
+
+    #messages {
+      z-index: 1;
+      overflow-y: auto;
+      padding: 30px 26px;
+      scroll-behavior: smooth;
+      background:
+        linear-gradient(90deg, transparent 49.8%, #8e8c9020 50%, transparent 50.2%),
+        var(--paper);
+    }
+
+    .welcome {
+      max-width: 590px;
+      margin: 8vh auto 0;
+      text-align: center;
+    }
+
+    .chapter {
+      display: inline-block;
+      margin-bottom: 12px;
+      padding: 5px 9px;
+      border: 1px solid var(--ink);
+      color: white;
+      font: .68rem "Courier New", monospace;
+      letter-spacing: .1em;
+      background: var(--rose);
+      transform: rotate(-1deg);
+    }
+
+    .welcome h2 {
+      margin: 0 0 10px;
+      font-size: clamp(1.65rem, 4vw, 2.45rem);
+      letter-spacing: -.035em;
+    }
+
+    .welcome p {
+      margin: 0 auto;
+      max-width: 470px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 9px;
+      margin-top: 25px;
+    }
+
+    .suggestion {
+      padding: 9px 12px;
+      border: 1px solid var(--ink);
+      border-radius: 2px;
+      color: var(--ink);
+      font: .76rem "Courier New", monospace;
+      background: var(--panel-soft);
+      box-shadow: 3px 3px 0 var(--shadow);
+      cursor: pointer;
+      transition: 120ms ease;
+    }
+
+    .suggestion:nth-child(2) {
+      border-color: var(--lavender);
+    }
+
+    .suggestion:nth-child(3) {
+      border-color: var(--rose);
+    }
+
+    .suggestion:hover {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 var(--shadow);
+    }
+
+    .message {
+      display: grid;
+      grid-template-columns: 38px minmax(0, auto);
+      align-items: start;
+      gap: 10px;
+      max-width: 82%;
+      margin-bottom: 20px;
+    }
+
+    .message.user {
+      grid-template-columns: minmax(0, auto) 38px;
+      margin-left: auto;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--ink);
+      border-radius: 50%;
+      color: white;
+      font: 700 .68rem "Courier New", monospace;
+      background: var(--lavender);
+    }
+
+    .user .avatar {
+      grid-column: 2;
+      grid-row: 1;
+      background: var(--rose);
+    }
+
+    .bubble {
+      position: relative;
+      padding: 12px 14px;
+      border: 1px solid var(--ink);
+      border-radius: 2px 13px 13px 13px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      background: var(--panel-soft);
+      box-shadow: 4px 4px 0 var(--shadow);
+    }
+
+    .user .bubble {
+      grid-column: 1;
+      grid-row: 1;
+      border-color: #6d6878;
+      border-radius: 13px 2px 13px 13px;
+      background: #d2ced7;
+    }
+
+    .error .bubble {
+      color: #743d49;
+      border-color: var(--rose);
+      background: #e6ced1;
+    }
+
+    .typing .bubble {
+      display: flex;
+      gap: 5px;
+      min-width: 60px;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--lavender);
+      animation: blink 1.2s infinite;
+    }
+
+    .dot:nth-child(2) {
+      animation-delay: .15s;
+    }
+
+    .dot:nth-child(3) {
+      animation-delay: .3s;
+    }
+
+    @keyframes blink {
+
+      0%,
+      60%,
+      100% {
+        opacity: .25;
+      }
+
+      30% {
+        opacity: 1;
+        transform: translateY(-3px);
+      }
+    }
+
+    form {
+      z-index: 1;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 10px;
+      padding: 15px 18px;
+      border-top: 2px solid var(--ink);
+      background: var(--panel-soft);
+    }
+
+    .prompt-mark {
+      color: var(--rose);
+      font: 700 1.2rem "Courier New", monospace;
+    }
+
+    input {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 2px;
+      padding: 11px 12px;
+      outline: none;
+      color: var(--ink);
+      font: .88rem "Courier New", monospace;
+      background: #dad8d3;
+    }
+
+    input:focus {
+      border-color: var(--lavender);
+      box-shadow: inset 3px 0 0 var(--lavender);
+    }
+
+    input::placeholder {
+      color: #8b8990;
+    }
+
+    button[type="submit"] {
+      height: 39px;
+      padding: 0 15px;
+      border: 1px solid var(--ink);
+      border-radius: 2px;
+      color: white;
+      font: 700 .76rem "Courier New", monospace;
+      letter-spacing: .05em;
+      background: var(--teal);
+      box-shadow: 3px 3px 0 var(--shadow);
+      cursor: pointer;
+    }
+
+    button[type="submit"]:hover:not(:disabled) {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 var(--shadow);
+    }
+
+    button:disabled {
+      opacity: .5;
+      cursor: wait;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 0;
+      }
+
+      .chat-app {
+        height: 100vh;
+        border-width: 0;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      .episode {
+        width: 66px;
+      }
+
+      .status {
+        display: none;
+      }
+
+      .brand {
+        padding: 12px;
+      }
+
+      #messages {
+        padding: 22px 14px;
+      }
+
+      .message {
+        max-width: 93%;
+      }
+
+      form {
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="chat-app">
+    <header>
+      <div class="brand">
+        <div class="portrait" aria-hidden="true">
+          <img src="./img/miku.png" alt="miku">
+        </div>
+        <div>
+          <h1>NasChat</h1>
+          <p class="subtitle">personal assistant / 会話モード</p>
+        </div>
+      </div>
+      <div class="status"><span class="status-dot"></span>CONNECTED</div>
+    </header>
+
+    <section id="messages" aria-live="polite">
+      <div class="welcome" id="welcome">
+        <span class="chapter">A NEW CONVERSATION</span>
+        <h2>What are we talking about?</h2>
+        <p>A quiet little corner for questions, ideas, and late-night thoughts.</p>
+        <div class="suggestions">
+          <button class="suggestion" type="button">Explain Java records</button>
+          <button class="suggestion" type="button">Help me plan a project</button>
+          <button class="suggestion" type="button">Write a short story</button>
+        </div>
+      </div>
+    </section>
+
+    <form id="chat-form">
+      <span class="prompt-mark">✦</span>
+      <input id="message-input" placeholder="Write a message..." autocomplete="off" required>
+      <button type="submit">SEND</button>
+    </form>
+  </main>
+
+  <script>
+    const form = document.querySelector("#chat-form");
+    const input = document.querySelector("#message-input");
+    const messages = document.querySelector("#messages");
+    const button = form.querySelector("button[type='submit']");
+    const welcome = document.querySelector("#welcome");
+
+    function addMessage(text, type) {
+      welcome?.remove();
+      const item = document.createElement("article");
+      item.className = `message ${type}`;
+
+      const avatar = document.createElement("div");
+      avatar.className = "avatar";
+      avatar.textContent = type === "user" ? "YOU" : type === "error" ? "!" : "AI";
+
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = text;
+
+      item.append(avatar, bubble);
+      messages.appendChild(item);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function setTyping(active) {
+      document.querySelector("#typing")?.remove();
+      if (!active) return;
+      const item = document.createElement("article");
+      item.id = "typing";
+      item.className = "message assistant typing";
+      item.innerHTML = '<div class="avatar">AI</div><div class="bubble"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>';
+      messages.appendChild(item);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    async function sendMessage(message) {
+      addMessage(message, "user");
+      button.disabled = true;
+      input.disabled = true;
+      setTyping(true);
+
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message })
+        });
+
+        if (!response.ok) throw new Error(`Server returned ${response.status}`);
+        const data = await response.json();
+        setTyping(false);
+        addMessage(data.reply, "assistant");
+      } catch (error) {
+        setTyping(false);
+        addMessage(error.message, "error");
+      } finally {
+        button.disabled = false;
+        input.disabled = false;
+        input.focus();
+      }
+    }
+
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      const message = input.value.trim();
+      if (!message) return;
+      input.value = "";
+      sendMessage(message);
+    });
+
+    document.querySelectorAll(".suggestion").forEach(item => {
+      item.addEventListener("click", () => sendMessage(item.textContent));
+    });
+  </script>
+</body>
+
+</html>
