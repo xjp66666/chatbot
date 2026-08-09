@@ -1,0 +1,14 @@
+services:
+  chatbot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: nas-chatbot
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    ports:
+      - "8080:8080"
